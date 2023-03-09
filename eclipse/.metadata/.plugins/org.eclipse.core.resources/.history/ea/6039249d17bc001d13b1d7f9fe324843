@@ -1,0 +1,65 @@
+package net.minecraft.tileentity;
+
+import java.util.UUID;
+
+import net.minecraft.init.Items;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
+
+public class TileEntityDoor extends TileEntity {
+	private UUID key_scheme_id = UUID.randomUUID();
+	private Boolean is_locked = false;
+	
+	public TileEntityDoor () {
+	}
+	
+	public UUID getKeySchemeId() {
+		return this.key_scheme_id;
+	}
+	
+	public Boolean isLocked() {
+		return this.is_locked;
+	}
+	
+	public void LockOrUnlock(ItemStack keyStack) {
+		if (keyStack.getItem() == Items.key) {
+			if (keyStack.getTagCompound() != null) {
+				if (keyStack.getTagCompound().getUUID("key_scheme_id") != null) {
+					if (keyStack.getTagCompound().getUUID("key_scheme_id").equals(this.key_scheme_id)) {
+						this.is_locked = !this.is_locked;
+					} else {
+						System.out.println("Bad key");
+					}
+				} else {
+					System.out.println("Bad key");
+				}				
+			} else {
+				this.is_locked = !this.is_locked;
+				System.out.println("Bad key");
+			}
+		} else {
+			System.out.println("You can lock the door only with a key");
+		}
+	}
+	
+	@Override
+   public void readFromNBT(NBTTagCompound compound) {
+      super.readFromNBT(compound);
+      
+      if (compound.hasKey("isLocked")) {
+    	  this.is_locked = compound.getBoolean("isLocked");
+      }
+
+      if (compound.hasKey("key_scheme_id")) {
+    	  this.key_scheme_id = UUID.fromString(compound.getString("key_scheme_id"));
+      }
+   }
+   @Override
+	   public void writeToNBT(NBTTagCompound compound) {
+	      super.writeToNBT(compound);
+	      
+	      compound.setBoolean("isLocked", this.is_locked);
+	      compound.setString("key_scheme_id", this.key_scheme_id.toString());
+	   }
+}

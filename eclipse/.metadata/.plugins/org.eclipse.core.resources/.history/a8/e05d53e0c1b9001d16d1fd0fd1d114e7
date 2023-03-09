@@ -1,0 +1,92 @@
+package net.minecraft.tileentity;
+
+import java.util.UUID;
+
+import net.minecraft.init.Items;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
+
+public class TileEntityDoor extends TileEntity {
+	private UUID key_scheme_id;
+	private Boolean is_locked;
+	
+	public TileEntityDoor () {
+		this.key_scheme_id = UUID.randomUUID();
+		this.is_locked = false;
+	}
+	
+	public UUID getKeySchemeId() {
+		return this.key_scheme_id;
+	}
+	
+	public Boolean isLocked() {
+		return this.is_locked;
+	}
+	
+	public void LockOrUnlock(ItemStack keyStack) {
+		if (keyStack.getItem() == Items.key) {
+			if (keyStack.getTagCompound() != null) {
+				if (keyStack.getTagCompound().getUUID("key_scheme_id") != null) {
+					if (keyStack.getTagCompound().getUUID("key_scheme_id").equals(this.key_scheme_id)) {
+						this.is_locked = !this.is_locked;
+					} else {
+						System.out.println("Bad key");
+					}
+				} else {
+					System.out.println("Bad key");
+				}				
+			} else {
+				this.is_locked = !this.is_locked;
+				System.out.println("Bad key");
+			}
+		} else {
+			System.out.println("You can lock the door only with a key");
+		}
+	}
+	
+
+   public void readFromNBT(NBTTagCompound compound) {
+      super.readFromNBT(compound);
+      NBTTagList nbttaglist = compound.getTagList("Items", 10);
+      this.chestContents = new ItemStack[this.getSizeInventory()];
+      
+      if (compound.hasKey("isLocked")) {
+    	  this.is_locked = compound.getBoolean("isLocked");
+      }
+
+      if (compound.hasKey("key_scheme_id")) {
+    	  this.key_scheme_id = compound.getUUID("key_scheme_id");
+      }
+      if(compound.hasKey("CustomName", 8)) {
+         this.customName = compound.getString("CustomName");
+      }
+
+      for(int i = 0; i < nbttaglist.tagCount(); ++i) {
+         NBTTagCompound nbttagcompound = nbttaglist.getCompoundTagAt(i);
+         int j = nbttagcompound.getByte("Slot") & 255;
+         if(j >= 0 && j < this.chestContents.length) {
+            this.chestContents[j] = ItemStack.loadItemStackFromNBT(nbttagcompound);
+         }
+      }
+   }
+
+	   public void writeToNBT(NBTTagCompound compound) {
+	      super.writeToNBT(compound);
+	      NBTTagList nbttaglist = new NBTTagList();
+
+	      for(int i = 0; i < this.chestContents.length; ++i) {
+	         if(this.chestContents[i] != null) {
+	            NBTTagCompound nbttagcompound = new NBTTagCompound();
+	            nbttagcompound.setByte("Slot", (byte)i);
+	            this.chestContents[i].writeToNBT(nbttagcompound);
+	            nbttaglist.appendTag(nbttagcompound);
+	         }
+	      }
+
+	      compound.setTag("Items", nbttaglist);
+	      if(this.hasCustomName()) {
+	         compound.setString("CustomName", this.customName);
+	      }
+	   }
+}
